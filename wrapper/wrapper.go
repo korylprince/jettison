@@ -1,0 +1,95 @@
+// +build windows
+
+//jettison_wrapper.exe <service log file> <program log file> <cmd> (<args>...)
+package main
+
+import (
+	"io"
+	"log"
+	"os"
+	"os/exec"
+
+	"code.google.com/p/winsvc/svc"
+)
+
+func catch() {
+	if err := recover(); err != nil {
+		log.Fatalln("Panicked:", err)
+	}
+}
+
+func cmd(args []string, f *os.File) *exec.Cmd {
+	c := exec.Command(args[0], args[1:]...)
+
+	stdout, err := c.StdoutPipe()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	stderr, err := c.StderrPipe()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	go io.Copy(f, stdout)
+	go io.Copy(f, stderr)
+	return c
+}
+
+type service struct{}
+
+func (s *service) Execute(args []string, r <-chan svc.ChangeRequest, changes chan<- svc.Status) (ssec bool, errno uint32) {
+	defer catch()
+	const cmdsAccepted = svc.AcceptStop | svc.AcceptShutdown
+	changes <- svc.Status{State: svc.StartPending}
+
+	f, err := os.OpenFile(os.Args[2], os.O_RDWR|os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer f.Close()
+	log.Println("Logging program output to:", os.Args[2])
+	c := cmd(os.Args[3:], f)
+	log.Println("Executing:", os.Args[3:])
+	err = c.Start()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	changes <- svc.Status{State: svc.Running, Accepts: cmdsAccepted}
+	log.Println("Service started")
+
+loop:
+	for {
+		select {
+		case c := <-r:
+			switch c.Cmd {
+			case svc.Interrogate:
+				log.Println("Received Control: Interrogate")
+				changes <- c.CurrentStatus
+			case svc.Stop, svc.Shutdown:
+				log.Println("Received Control: Stop")
+				break loop
+			}
+		}
+	}
+	c.Process.Kill()
+	changes <- svc.Status{State: svc.StopPending}
+	return
+}
+
+func main() {
+	f, err := os.OpenFile(os.Args[1], os.O_RDWR|os.O_APPEND|os.O_CREATE, 0644)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	defer f.Close()
+	log.Println("Logging to:", os.Args[1])
+	log.SetOutput(f)
+
+	defer catch()
+	log.Println("Attempting to run service")
+	err = svc.Run("jettison", &service{})
+	if err != nil {
+		log.Fatalln("Error running service:", err)
+	}
+	log.Println("Stopped")
+}
