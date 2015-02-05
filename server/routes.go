@@ -2,11 +2,12 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/gorilla/handlers"
+	"github.com/gorilla/mux"
 )
 
 var router http.Handler
@@ -31,5 +32,5 @@ func routesInit() {
 	r.Handle(apiPrefix+"/list/{room}", http.HandlerFunc(FileListHandler)).Methods("GET")
 	fileServer := http.StripPrefix(apiPrefix+"/file", http.FileServer(http.Dir(config.Podbay)))
 	r.PathPrefix(apiPrefix + "/file").Handler(fileServer).Methods("GET")
-	router = handlers.CompressHandler(handlers.CombinedLoggingHandler(os.Stdout, r))
+	router = handlers.CombinedLoggingHandler(os.Stdout, r)
 }
