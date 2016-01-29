@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package rpc;
+
+message Report {
+    string serial = 1;
+    bytes mac_address = 2;
+    string location = 3;
+    map<string, uint64> version = 4; //group:version
+}
+
+message Notification {
+    string group = 1;
+    uint64 version = 2;
+}
+
+service Events {
+    rpc Stream(stream Report) returns (stream Notification);
+}

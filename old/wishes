@@ -1,0 +1,9 @@
+✓ Need to tell clients to download files instantly, not wait for interval
+Download files concurrently?
+run commands remotely (install remotely?)
+✓ inventory mac addresses
+✓ place files anywhere
+web interface
+reload definition without reloading server
+Set rooms, groups from server
+Download files over GRPC

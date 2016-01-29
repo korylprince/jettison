@@ -1,39 +1,38 @@
 package main
 
 import (
-	"log"
-	"os"
+	"fmt"
 
 	"github.com/kelseyhightower/envconfig"
 )
 
 //Config stores configuration from the environment
 type Config struct {
-	ListenAddr string
-	Podbay     string
+	HTTPListenAddr string
+	RPCListenAddr  string
+	DefinitionPath string
+	CachePath      string
 }
 
-var config = &Config{}
-
-func envInit() {
+//ParseEnv parses a Config from the environment, returning an error if one occurred
+func ParseEnv() (*Config, error) {
+	config := &Config{}
 	err := envconfig.Process("JETTISON", config)
 	if err != nil {
-		log.Panicln("Error reading configuration from environment:", err)
+		return nil, fmt.Errorf("Error reading configuration from environment: %v", err)
 	}
-	if config.ListenAddr == "" {
-		log.Fatalln("JETTISON_LISTENADDR must be configured")
+	if config.HTTPListenAddr == "" {
+		config.HTTPListenAddr = ":50080"
 	}
-	if config.Podbay == "" {
-		log.Fatalln("JETTISON_PODBAY must be configured")
+	if config.RPCListenAddr == "" {
+		config.RPCListenAddr = ":50081"
+	}
+	if config.DefinitionPath == "" {
+		return nil, fmt.Errorf("JETTISON_DEFINITIONPATH must be configured")
+	}
+	if config.CachePath == "" {
+		return nil, fmt.Errorf("JETTISON_CACHEPATH must be configured")
 	}
 
-	if config.Podbay[len(config.Podbay)-1:] != "/" {
-		config.Podbay += "/"
-	}
-
-	// check that directories exist
-	if _, err := os.Stat(config.Podbay); os.IsNotExist(err) {
-		log.Fatalln(err)
-	}
-	log.Printf("Config: %#v\n", *config)
+	return config, nil
 }

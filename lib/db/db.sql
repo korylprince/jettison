@@ -1,0 +1,14 @@
+CREATE TABLE device (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    serial VARCHAR(30) UNIQUE NOT NULL,
+    mac_address VARCHAR(17) NOT NULL
+);
+
+CREATE TABLE report (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    device_id INTEGER NOT NULL,
+    location VARCHAR(5) NOT NULL,
+    file_set_version INTEGER NOT NULL,
+    time DATETIME NOT NULL,
+    FOREIGN KEY (device_id) REFERENCES device(id)
+);
