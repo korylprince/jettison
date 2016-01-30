@@ -6,20 +6,19 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/korylprince/jettison/lib/file"
 	"github.com/korylprince/jettison/lib/rpc"
 )
 
 //NotifyService registers event streams for notifications of group version updates
 type NotifyService struct {
 	config   *Config
-	files    *file.Files
+	files    *FileService
 	registry map[string]map[rpc.Events_StreamServer]struct{} //group:set{connections}
 	mu       *sync.RWMutex
 }
 
 //NewNotifyService returns a new NotifyService
-func NewNotifyService(config *Config, files *file.Files) *NotifyService {
+func NewNotifyService(config *Config, files *FileService) *NotifyService {
 	return &NotifyService{
 		config:   config,
 		files:    files,

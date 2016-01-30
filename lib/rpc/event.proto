@@ -4,7 +4,7 @@ package rpc;
 
 message Report {
     string serial = 1;
-    bytes mac_address = 2;
+    string hardware_addr = 2;
     string location = 3;
     map<string, uint64> version = 4; //group:version
 }

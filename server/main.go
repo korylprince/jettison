@@ -8,7 +8,6 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/korylprince/jettison/lib/file"
 	"github.com/korylprince/jettison/lib/rpc"
 
 	"google.golang.org/grpc"
@@ -21,7 +20,7 @@ func main() {
 	}
 	log.Printf("Config: %#v\n", *config)
 
-	files, err := file.FilesFromDefinition(config.DefinitionPath, config.CachePath)
+	files, err := FilesFromDefinition(config.DefinitionPath, config.CachePath)
 	if err != nil {
 		log.Fatalln("Error creating Files:", err)
 	}
@@ -38,8 +37,8 @@ func main() {
 	go server.ListenAndServe()
 
 	s := grpc.NewServer()
-	rpc.RegisterFileSetServer(s, &fileService{Files: files})
-	rpc.RegisterEventsServer(s, &eventService{NotifyService: notifyService})
+	rpc.RegisterFileSetServer(s, &FileSetServer{Files: files})
+	rpc.RegisterEventsServer(s, &EventServer{NotifyService: notifyService})
 
 	lis, err := net.Listen("tcp", config.RPCListenAddr)
 	if err != nil {

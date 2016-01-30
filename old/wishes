@@ -1,9 +1,16 @@
 ✓ Need to tell clients to download files instantly, not wait for interval
-Download files concurrently?
-run commands remotely (install remotely?)
 ✓ inventory mac addresses
 ✓ place files anywhere
+✓ reload definition without reloading server
+Record to database
+Download files concurrently?
+run commands remotely (install remotely?)
 web interface
-reload definition without reloading server
 Set rooms, groups from server
 Download files over GRPC
+Use TLS
+Programmatically get serial and mac address
+LLDP on clients to know what switch port
+automatically reload on file change detection
+cleanup (client cache really just needs path, etc)
+implement better retry strategies

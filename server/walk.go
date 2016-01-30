@@ -1,4 +1,4 @@
-package file
+package main
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/korylprince/jettison/lib/cache"
+	"github.com/korylprince/jettison/lib/file"
 )
 
 //fileInfo represents metadata about a file
@@ -31,13 +32,13 @@ func renamePath(path, origin, dest string) string {
 
 //WalkDefinition walks d, returning all, a Set with origin paths, mapped a map of Sets with destination paths split by groups,
 //or an error if one occurred. WalkDefinition will use cache as hash cache and workers for the number of workers.
-func WalkDefinition(ctx context.Context, d Definition, c cache.Cache, workers int) (all Set, mapped map[string]*VersionedSet, err error) {
-	m := make(map[string]*VersionedSet)
-	all = make(Set)
+func WalkDefinition(ctx context.Context, d file.Definition, c cache.Cache, workers int) (all file.Set, mapped map[string]*file.VersionedSet, err error) {
+	m := make(map[string]*file.VersionedSet)
+	all = make(file.Set)
 	for group, mapping := range d {
-		m[group] = &VersionedSet{Set: make(Set), Version: 0}
+		m[group] = &file.VersionedSet{Set: make(file.Set), Version: 0}
 		for origin, dest := range mapping {
-			s := make(Set)
+			s := make(file.Set)
 
 			err := walkRoot(ctx, c, s, origin, workers)
 			if err != nil {
@@ -64,7 +65,7 @@ func WalkDefinition(ctx context.Context, d Definition, c cache.Cache, workers in
 	return all, m, nil
 }
 
-func walkRoot(ctx context.Context, c cache.Cache, s Set, root string, workers int) error {
+func walkRoot(ctx context.Context, c cache.Cache, s file.Set, root string, workers int) error {
 	rootctx, rootCancel := context.WithCancel(ctx)
 	accctx, accCancel := context.WithCancel(ctx)
 	infos := make(chan *fileInfo)
@@ -113,36 +114,8 @@ func rootWalker(ctx context.Context, root string, out chan<- *fileInfo) error {
 	})
 }
 
-//pathWalker passes an *Info for every path coming from in to out, returning the
-//first error encountered, if any. If ctx is cancelled, pathWalker returns at earliest opportunity
-func pathWalker(ctx context.Context, in <-chan string, out chan<- *fileInfo) error {
-	defer close(out)
-	for {
-		path, ok := <-in
-		if !ok {
-			return nil
-		}
-
-		info, err := os.Stat(path)
-		if err != nil {
-			return fmt.Errorf("Error stating path %s: %v", path, err)
-		}
-
-		if !info.Mode().IsRegular() {
-			continue
-		}
-
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case out <- &fileInfo{Path: path, ModTime: info.ModTime()}:
-			return nil
-		}
-	}
-}
-
 //Accumulator adds hashed paths given on in to set.
-func accumulator(ctx context.Context, set Set, c cache.Cache, in <-chan *fileInfo, workers int) error {
+func accumulator(ctx context.Context, set file.Set, c cache.Cache, in <-chan *fileInfo, workers int) error {
 
 	wg := new(sync.WaitGroup)
 	out := make(chan *fileInfo, workers)
@@ -211,7 +184,7 @@ func hasher(ctx context.Context, wg *sync.WaitGroup, c cache.Cache, in <-chan *f
 			}
 
 			//compute hash
-			hash, err = Hash(info.Path)
+			hash, err = file.Hash(info.Path)
 			if err != nil {
 				sendError(ctx, errors, fmt.Errorf("Error hashing %s: %v", info.Path, err))
 				return

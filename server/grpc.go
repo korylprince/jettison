@@ -2,21 +2,19 @@ package main
 
 import (
 	"fmt"
-	"net"
 	"sort"
 	"strings"
 
-	"github.com/korylprince/jettison/lib/file"
 	"github.com/korylprince/jettison/lib/rpc"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
 )
 
-type fileService struct {
-	Files *file.Files
+type FileSetServer struct {
+	Files *FileService
 }
 
-func (s fileService) Get(ctx context.Context, r *rpc.FileSetRequest) (*rpc.FileSetResponse, error) {
+func (s FileSetServer) Get(ctx context.Context, r *rpc.FileSetRequest) (*rpc.FileSetResponse, error) {
 	sets := s.Files.Sets(r.Groups...)
 	var grps sort.StringSlice
 	resp := &rpc.FileSetResponse{Sets: make(map[string]*rpc.FileSetResponse_VersionedSet)}
@@ -29,11 +27,11 @@ func (s fileService) Get(ctx context.Context, r *rpc.FileSetRequest) (*rpc.FileS
 	return resp, nil
 }
 
-type eventService struct {
+type EventServer struct {
 	NotifyService *NotifyService
 }
 
-func (s eventService) Stream(stream rpc.Events_StreamServer) error {
+func (s EventServer) Stream(stream rpc.Events_StreamServer) error {
 	//register for notifications
 	if md, ok := metadata.FromContext(stream.Context()); ok {
 		if groups, ok := md["groups"]; ok {
@@ -52,8 +50,8 @@ func (s eventService) Stream(stream rpc.Events_StreamServer) error {
 			return err
 		}
 		Report(rpt)
-		LogGRPC(stream.Context(), "Report", fmt.Sprintf("Serial: %s, MAC Address: %s, Location: %s, Version: %v",
-			rpt.Serial, net.HardwareAddr(rpt.MacAddress), rpt.Location, rpt.Version))
+		LogGRPC(stream.Context(), "Report", fmt.Sprintf("Serial: %s, HardwareAddr: %s, Location: %s, Version: %v",
+			rpt.Serial, rpt.HardwareAddr, rpt.Location, rpt.Version))
 	}
 }
 
