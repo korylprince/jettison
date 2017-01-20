@@ -14,3 +14,4 @@ LLDP on clients to know what switch port
 automatically reload on file change detection
 cleanup (client cache really just needs path, etc)
 implement better retry strategies
+investigate files with the same hash
