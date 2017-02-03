@@ -4,7 +4,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/OneOfOne/xxhash/native"
+	"github.com/OneOfOne/xxhash"
 )
 
 //Hash returns the xxHash64 of the given path, or an error if one occurred
