@@ -3,7 +3,6 @@ syntax = "proto3";
 package rpc;
 
 message Report {
-    string serial = 1;
     string hardware_addr = 2;
     string location = 3;
     map<string, uint64> version = 4; //group:version

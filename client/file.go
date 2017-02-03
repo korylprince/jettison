@@ -19,6 +19,7 @@ import (
 	"github.com/korylprince/jettison/lib/rpc"
 )
 
+//FileService manages the local files for the jettison client
 type FileService struct {
 	config *Config
 	cache  cache.Cache
@@ -29,6 +30,7 @@ type FileService struct {
 	scan chan []string //chan groups
 }
 
+//NewFileService returns a new FileService
 func NewFileService(config *Config, c cache.Cache, client rpc.FileSetClient) *FileService {
 	f := &FileService{
 		config: config,
@@ -42,10 +44,12 @@ func NewFileService(config *Config, c cache.Cache, client rpc.FileSetClient) *Fi
 	return f
 }
 
+//Scan causes the FileService to rescan the groups
 func (s *FileService) Scan(groups ...string) {
 	s.scan <- groups
 }
 
+//Versions returns the current FileSet versions
 func (s *FileService) Versions() map[string]uint64 {
 	//map[group]version
 	v := make(map[string]uint64)

@@ -8,21 +8,22 @@ import (
 	"github.com/korylprince/jettison/lib/rpc"
 )
 
+//GenerateReport generates an *rpc.Report from the given Config and FileService
 func GenerateReport(config *Config, fs *FileService) *rpc.Report {
 	return &rpc.Report{
-		Serial:       config.Serial,
 		HardwareAddr: config.HardwareAddr,
 		Location:     config.Location,
 		Version:      fs.Versions(),
 	}
 }
 
+//ReportService is a GRPC ReportService
 func ReportService(config *Config, stream rpc.Events_StreamClient, fs *FileService) {
 	log.Println("Report: Service Started")
 	for {
 		rpt := GenerateReport(config, fs)
-		log.Printf("Report: Serial: %s, HardwareAddr: %s, Location: %s, Version: %v",
-			rpt.Serial, rpt.HardwareAddr, rpt.Location, rpt.Version)
+		log.Printf("Report: HardwareAddr: %s, Location: %s, Version: %v",
+			rpt.GetHardwareAddr(), rpt.GetLocation(), rpt.GetVersion())
 
 		err := stream.Send(rpt)
 		if err != nil {

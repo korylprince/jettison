@@ -12,7 +12,6 @@ import (
 type Config struct {
 	GroupStr     string `envconfig:"GROUPS"`
 	Groups       []string
-	Serial       string
 	HardwareAddr string
 	Location     string
 
@@ -38,9 +37,6 @@ func ParseEnv() (*Config, error) {
 	}
 	if config.Location == "" {
 		return nil, fmt.Errorf("JETTISON_LOCATION must be configured")
-	}
-	if config.Serial == "" {
-		return nil, fmt.Errorf("JETTISON_SERIAL must be configured")
 	}
 	if config.HardwareAddr == "" {
 		return nil, fmt.Errorf("JETTISON_HARDWAREADDR must be configured")
