@@ -65,7 +65,6 @@ func (s *service) Execute(args []string, r <-chan svc.ChangeRequest, changes cha
 	done := make(chan struct{})
 	go waitForCmd(p, changes, done)
 
-loop:
 	for {
 		select {
 		case c := <-r:
@@ -78,14 +77,13 @@ loop:
 				changes <- svc.Status{State: svc.StopPending}
 				p.Process.Kill()
 				changes <- svc.Status{State: svc.Stopped}
-				break loop
+				return
 			}
 		case _ = <-done:
 			log.Println("Process died")
-			break loop
+			os.Exit(-1)
 		}
 	}
-	return
 }
 
 func main() {
