@@ -54,7 +54,7 @@ func WalkDefinition(ctx context.Context, d file.Definition, c cache.Cache, worke
 			for hash, path := range s {
 				//origin is file
 				if origin == path {
-					m[group].Set[hash] = path
+					m[group].Set[hash] = dest
 				} else {
 					m[group].Set[hash] = renamePath(path, origin, dest)
 				}
