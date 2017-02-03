@@ -52,9 +52,9 @@ func (s *service) Execute(args []string, r <-chan svc.ChangeRequest, changes cha
 	}
 	defer f.Close()
 	log.Println("Logging program output to:", os.Args[2])
-	c := cmd(os.Args[3:], f)
+	p := cmd(os.Args[3:], f)
 	log.Println("Executing:", os.Args[3:])
-	err = c.Start()
+	err = p.Start()
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -63,7 +63,7 @@ func (s *service) Execute(args []string, r <-chan svc.ChangeRequest, changes cha
 	log.Println("Service started")
 
 	done := make(chan struct{})
-	go waitForCmd(c, changes, done)
+	go waitForCmd(p, changes, done)
 
 loop:
 	for {
@@ -76,10 +76,10 @@ loop:
 			case svc.Stop, svc.Shutdown:
 				log.Println("Received Control: Stop")
 				changes <- svc.Status{State: svc.StopPending}
-				c.Process.Kill()
+				p.Process.Kill()
 				break loop
 			}
-		case _ := <-done:
+		case _ = <-done:
 			log.Println("Process died")
 			break loop
 		}
