@@ -77,6 +77,7 @@ loop:
 				log.Println("Received Control: Stop")
 				changes <- svc.Status{State: svc.StopPending}
 				p.Process.Kill()
+				changes <- svc.Status{State: svc.Stopped}
 				break loop
 			}
 		case _ = <-done:
@@ -84,7 +85,6 @@ loop:
 			break loop
 		}
 	}
-	changes <- svc.Status{State: svc.Stopped}
 	return
 }
 
