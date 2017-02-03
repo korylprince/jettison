@@ -9,7 +9,7 @@ import (
 	"os"
 	"os/exec"
 
-	"code.google.com/p/winsvc/svc"
+	"github.com/btcsuite/winsvc/svc"
 )
 
 func catch() {
@@ -36,6 +36,11 @@ func cmd(args []string, f *os.File) *exec.Cmd {
 
 type service struct{}
 
+func waitForCmd(c *exec.Cmd, changes chan<- svc.Status, done chan<- struct{}) {
+	c.Wait()
+	close(done)
+}
+
 func (s *service) Execute(args []string, r <-chan svc.ChangeRequest, changes chan<- svc.Status) (ssec bool, errno uint32) {
 	defer catch()
 	const cmdsAccepted = svc.AcceptStop | svc.AcceptShutdown
@@ -57,6 +62,9 @@ func (s *service) Execute(args []string, r <-chan svc.ChangeRequest, changes cha
 	changes <- svc.Status{State: svc.Running, Accepts: cmdsAccepted}
 	log.Println("Service started")
 
+	done := make(chan struct{})
+	go waitForCmd(c, changes, done)
+
 loop:
 	for {
 		select {
@@ -67,12 +75,16 @@ loop:
 				changes <- c.CurrentStatus
 			case svc.Stop, svc.Shutdown:
 				log.Println("Received Control: Stop")
+				changes <- svc.Status{State: svc.StopPending}
+				c.Process.Kill()
 				break loop
 			}
+		case _ := <-done:
+			log.Println("Process died")
+			break loop
 		}
 	}
-	c.Process.Kill()
-	changes <- svc.Status{State: svc.StopPending}
+	changes <- svc.Status{State: svc.Stopped}
 	return
 }
 
